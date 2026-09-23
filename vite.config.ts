@@ -29,5 +29,5 @@ export default defineConfig({
   plugins: [react(), tailwind(), serveResources()],
   clearScreen: false,
   server: { port: 1420, strictPort: true },
-  test: { environment: 'jsdom', globals: true, include: ['src/**/*.test.{ts,tsx}'] },
+  test: { environment: 'jsdom', globals: true, include: ['src/**/*.test.{ts,tsx}'], setupFiles: ['src/test/setup.ts'] },
 });
