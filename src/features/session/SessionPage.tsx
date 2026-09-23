@@ -52,7 +52,7 @@ export function SessionPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <TopBar pos={run.pos} total={run.items.length} onEnd={end} />
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center-safe overflow-auto">
         {item.game === 'flip' && <FlipCard key={key} {...common} card={cards[w.key]} />}
         {item.game === 'mc' && <MultipleChoice key={key} {...common} dir={item.dir} />}
         {item.game === 'listen' && (listenMode === 'type' || typeInstead === run.pos

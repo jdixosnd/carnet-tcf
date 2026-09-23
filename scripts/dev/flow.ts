@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import { chromium, type Page } from '@playwright/test';
 const [out, game, dark] = process.argv.slice(2);
-const seed = JSON.parse(fs.readFileSync('/tmp/claude-1000/seed.json', 'utf8'));
+const seed = JSON.parse(fs.readFileSync(process.env.SEED ?? '/tmp/claude-1000/seed.json', 'utf8'));
 seed.settings.game = game; seed.settings.levels = []; seed.settings.tests = null;
 if (process.env.DIR) seed.settings.mcDirection = process.env.DIR;
 if (process.env.LM) seed.settings.listenMode = process.env.LM;
+if (process.env.SIZE) seed.settings.sessionSize = +process.env.SIZE;
 const browser = await chromium.launch();
 const page: Page = await browser.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: dark ? 'dark' : 'light' });
 page.on('pageerror', e => console.log('pageerror', e.message));

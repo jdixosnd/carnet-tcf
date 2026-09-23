@@ -68,7 +68,9 @@ body {
   user-select: none;
 }
 input, textarea { user-select: text; }
-:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+@layer base {
+  :focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+}
 .eyebrow { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c-ink-3); }
 .tnum { font-variant-numeric: tabular-nums; }
 .press { transition: transform 120ms, background-color 150ms, border-color 150ms, color 150ms; }

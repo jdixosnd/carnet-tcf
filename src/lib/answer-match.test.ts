@@ -39,3 +39,9 @@ test('a different word is wrong', () => {
   expect(m.kind).toBe('wrong');
   expect(isCorrect(m)).toBe(false);
 });
+
+test('articles themselves can be the answer', () => {
+  expect(matchTyped('le', W('le'), words).kind).toBe('exact');
+  expect(matchTyped('la', W('le'), words).kind).toBe('exact');
+  expect(matchTyped("l'", W('le'), words).kind).toBe('exact');
+});

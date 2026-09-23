@@ -14,9 +14,11 @@ const ARTICLE = /^(?:(?:le|la|les|un|une|se)\s+|(?:l'|s')\s*)/;
 
 export function matchTyped(input: string, w: Word, words: Word[]): Match {
   const cleaned = String(input).toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
+  const targets = [w.fr, ...w.allForms].map(f => f.toLowerCase());
+  // The word itself may be an article ("le", "la", "l'").
+  if (cleaned && targets.includes(cleaned)) return { kind: 'exact', typed: cleaned };
   const typed = /^(le|la|les|un|une|se|l'|s')$/.test(cleaned) ? '' : cleaned.replace(ARTICLE, '').trim();
   if (!typed) return { kind: 'empty' };
-  const targets = [w.fr, ...w.allForms].map(f => f.toLowerCase());
   if (targets.includes(typed)) return { kind: 'exact', typed };
   const nt = norm(typed);
   const correct = targets.find(t => norm(t) === nt);
