@@ -15,7 +15,8 @@ export function Segmented<T extends string>({ label, value, options, onChange, s
     refs.current[n]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={label} className="flex w-max max-w-full gap-1.5 rounded-[10px] bg-chrome p-1">
+    <div role="radiogroup" aria-label={label}
+      className={cn('flex w-max max-w-full bg-chrome', size === 'md' ? 'gap-1.5 rounded-[10px] p-1' : 'gap-1 rounded-[8px] p-[3px]')}>
       {options.map((o, k) => {
         const on = o.value === value;
         return (
@@ -32,8 +33,8 @@ export function Segmented<T extends string>({ label, value, options, onChange, s
               if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
             }}
             className={cn(
-              'press whitespace-nowrap rounded-[7px]',
-              size === 'md' ? 'px-4 py-2 text-[15px]' : 'px-3 py-1.5 text-[14px]',
+              'press whitespace-nowrap',
+              size === 'md' ? 'rounded-[7px] px-4 py-2 text-[15px]' : 'rounded-[6px] px-3 py-1.5 text-[14px]',
               on ? 'bg-surface font-bold text-ink shadow-seg' : 'text-ink-2 hover:text-ink',
             )}
           >
