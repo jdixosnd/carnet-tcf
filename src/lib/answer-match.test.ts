@@ -1,0 +1,41 @@
+import { matchTyped, isCorrect } from './answer-match';
+import { realWords, byFr } from '../test/fixtures';
+
+const words = realWords();
+const W = (fr: string) => byFr(words, fr);
+
+test('exact headword, with spaces, capitals and an article', () => {
+  expect(matchTyped('réveil', W('réveil'), words).kind).toBe('exact');
+  expect(matchTyped('  Le Réveil ', W('réveil'), words).kind).toBe('exact');
+  expect(matchTyped('l’eau', W('eau'), words).kind).toBe('exact');
+});
+
+test('any heard form counts', () => {
+  expect(matchTyped('allons', W('aller'), words).kind).toBe('exact');
+});
+
+test('missing accent counts, with the letters to fix', () => {
+  expect(matchTyped('reveil', W('réveil'), words)).toMatchObject({ kind: 'accent', correct: 'réveil', fixed: [1] });
+});
+
+test('a homophone counts', () => {
+  expect(matchTyped('cours', W('cour'), words).kind).toBe('homophone');
+});
+
+test('words starting with article letters are not mangled', () => {
+  expect(matchTyped('lecture', W('lecture'), words).kind).toBe('exact');
+  expect(matchTyped('laisser', W('laisser'), words).kind).toBe('exact');
+  expect(matchTyped('semaine', W('semaine'), words).kind).toBe('exact');
+  expect(matchTyped('unique', W('unique'), words).kind).toBe('exact');
+});
+
+test('empty input or a bare article is ignored', () => {
+  expect(matchTyped('   ', W('réveil'), words).kind).toBe('empty');
+  expect(matchTyped('la', W('réveil'), words).kind).toBe('empty');
+});
+
+test('a different word is wrong', () => {
+  const m = matchTyped('chat', W('réveil'), words);
+  expect(m.kind).toBe('wrong');
+  expect(isCorrect(m)).toBe(false);
+});
