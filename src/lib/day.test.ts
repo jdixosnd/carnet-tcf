@@ -8,5 +8,5 @@ test('day number is constant within a local day and increments at local midnight
 
 test('dates', () => {
   expect(shortDate(dayNum(new Date(2026, 8, 11, 12)))).toBe('11 Sep');
-  expect(longDate(new Date(2026, 8, 24))).toBe('Wednesday 24 September');
+  expect(longDate(new Date(2025, 8, 24))).toBe('Wednesday 24 September');
 });
