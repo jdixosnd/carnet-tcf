@@ -14,7 +14,8 @@ for (const spec of routes.split(',')) {
   page.on('console', m => { if (m.type() === 'error') console.log('console', m.text()); });
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('carnet-desktop-dev', s); sessionStorage.setItem('seeded', '1'); } }, seed);
   await page.goto(`http://localhost:1420/#${route}`);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(700);
+  if (process.env.TYPE) { await page.keyboard.type(process.env.TYPE); await page.waitForTimeout(300); }
   const name = `${route.replace(/\W+/g, '_')}${mod ? '_' + mod : ''}.png`;
   await page.screenshot({ path: `${outDir}/${name}` });
   console.log('shot', name);
