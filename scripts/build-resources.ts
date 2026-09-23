@@ -5,12 +5,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const candidates = [
-  process.env.TCF_DATA,
-  path.join(os.homedir(), 'Downloads/TCF Data/TCF Data'),
-  path.join(os.homedir(), 'Downloads/TCF Data'),
-].filter((p): p is string => !!p);
-const root = candidates.find(p => fs.existsSync(path.join(p, '4_app/carnet-tcf.html')));
+// The archive comes in 4 parts; unzipped side by side, each part holds some of 4_app/audio.
+// Accept one merged folder, or a folder containing the "TCF Data - part N of 4" folders.
+const bases = [process.env.TCF_DATA, path.join(os.homedir(), 'Downloads/TCF Data')].filter((p): p is string => !!p);
+const candidates = bases.flatMap(b => {
+  const parts = fs.existsSync(b) ? fs.readdirSync(b).filter(d => /part \d+ of \d+$/.test(d)).map(d => path.join(b, d, 'TCF Data')) : [];
+  return [b, path.join(b, 'TCF Data'), ...parts];
+});
+const roots = [...new Set(candidates)].filter(p => fs.existsSync(path.join(p, '4_app')));
+const root = roots.find(p => fs.existsSync(path.join(p, '4_app/carnet-tcf.html')));
 if (!root) {
   console.error(`Could not find "4_app/carnet-tcf.html". Unzip the TCF Data archives and set TCF_DATA to the folder that contains 4_app/.\nTried:\n  ${candidates.join('\n  ')}`);
   process.exit(1);
@@ -27,10 +30,21 @@ fs.writeFileSync(path.join(out, 'words.json'), JSON.stringify(rows));
 fs.copyFileSync(path.join(root, '4_app/audio_index.json'), path.join(out, 'audio_index.json'));
 
 let copied = 0;
-const audioDir = path.join(root, '4_app/audio');
-for (const f of fs.readdirSync(audioDir)) {
-  const src = path.join(audioDir, f), dst = path.join(out, 'audio', f);
-  if (fs.existsSync(dst) && fs.statSync(dst).size === fs.statSync(src).size) continue;
-  fs.copyFileSync(src, dst); copied++;
+const packs = new Set<string>();
+for (const r of roots) {
+  const audioDir = path.join(r, '4_app/audio');
+  if (!fs.existsSync(audioDir)) continue;
+  for (const f of fs.readdirSync(audioDir)) {
+    packs.add(f);
+    const src = path.join(audioDir, f), dst = path.join(out, 'audio', f);
+    if (fs.existsSync(dst) && fs.statSync(dst).size === fs.statSync(src).size) continue;
+    fs.copyFileSync(src, dst); copied++;
+  }
 }
-console.log(`resources: ${rows.length} words, ${fs.readdirSync(audioDir).length} audio packs (${copied} copied) from ${root}`);
+const index = JSON.parse(fs.readFileSync(path.join(out, 'audio_index.json'), 'utf8')) as { w: { files: string[] }; s: { files: string[] } };
+const missing = [...index.w.files, ...index.s.files].map(f => path.basename(f)).filter(f => !packs.has(f));
+if (missing.length) {
+  console.error(`Missing ${missing.length} audio packs (e.g. ${missing.slice(0, 3).join(', ')}). Unzip all 4 parts of the TCF Data archive.`);
+  process.exit(1);
+}
+console.log(`resources: ${rows.length} words, ${packs.size} audio packs (${copied} copied) from ${roots.length} folder(s)`);
