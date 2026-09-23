@@ -56,7 +56,7 @@ export function ListenType({ word: w, onResult }: { word: Word; practice: boolea
   });
 
   return (
-    <div className="flex w-full flex-1 flex-col items-center gap-8 pb-10 pt-10">
+    <div data-word={w.fr} className="flex w-full flex-1 flex-col items-center gap-8 pb-10 pt-10">
       <span className="eyebrow">Type what you hear</span>
       <ListenCircle filled={false} wordIdx={w.i} onPlay={() => void playWord(w.i)} />
       <div className="flex w-[560px] flex-col gap-3">
