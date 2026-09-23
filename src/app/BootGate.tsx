@@ -6,8 +6,8 @@ import { isTauri } from '../repo/env';
 
 async function openDataFolder() {
   if (!isTauri()) return;
-  const [{ openPath }, { appDataDir }] = await Promise.all([import('@tauri-apps/plugin-opener'), import('@tauri-apps/api/path')]);
-  await openPath(await appDataDir());
+  const [{ openPath }, { appConfigDir }] = await Promise.all([import('@tauri-apps/plugin-opener'), import('@tauri-apps/api/path')]);
+  await openPath(await appConfigDir());
 }
 
 const MESSAGES = {

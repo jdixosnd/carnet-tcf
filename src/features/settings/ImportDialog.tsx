@@ -29,7 +29,7 @@ export function ImportDialog({ open, onOpenChange, preloaded, onDone }: {
       onOpenChange(false);
       onDone?.();
     } catch {
-      setError("Couldn't restore this backup. Your progress was not changed.");
+      setError("Couldn't restore this backup. Check Progress to see what is saved, then try again.");
     } finally { setBusy(false); }
   };
 

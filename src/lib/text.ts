@@ -2,7 +2,7 @@
 
 /** Lower-case, strip accents, straighten apostrophes, collapse spaces. */
 export const norm = (s: string): string =>
-  String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
+  String(s).replace(/œ/g, 'oe').replace(/Œ/g, 'OE').replace(/æ/g, 'ae').replace(/Æ/g, 'AE').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
 
 /** Rough pronunciation key: drops silent endings and merges -er/-ez/-ai/-et, so homophones share a key. */
 export function soundKey(s: string): string {

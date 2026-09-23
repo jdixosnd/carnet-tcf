@@ -16,14 +16,23 @@ const int = (n: number) => {
 
 export function sqliteRepo(open: () => Promise<Db>, path: () => Promise<string>): Repo {
   let dbp: Promise<Db> | null = null;
-  const db = () => (dbp ??= open());
+  const db = () => (dbp ??= open().catch(e => { dbp = null; throw e; }));
 
   /**
    * Runs several statements as one transaction in a single execute() call: the plugin's connection pool
    * may put separate calls on different connections, so BEGIN/COMMIT across calls isn't safe.
    * Values are inlined as escaped literals because bound parameters don't span statements.
    */
-  const batch = async (stmts: string[]) => (await db()).execute(['BEGIN', ...stmts, 'COMMIT'].join(';\n') + ';');
+  const batch = async (stmts: string[]) => {
+    const d = await db();
+    try {
+      await d.execute(['BEGIN', ...stmts, 'COMMIT'].join(';\n') + ';');
+    } catch (e) {
+      // sqlx doesn't roll back a transaction it didn't open; close it so the connection isn't left inside it.
+      await d.execute('ROLLBACK').catch(() => {});
+      throw e;
+    }
+  };
 
   const insertCards = (cards: Record<string, Card>): string[] => {
     const rows = Object.entries(cards).map(([w, c]) =>
@@ -108,8 +117,9 @@ export function sqliteRepo(open: () => Promise<Db>, path: () => Promise<string>)
 
 /** The real repo inside Tauri. */
 export async function openSqliteRepo(): Promise<Repo> {
-  const [{ default: Database }, { appDataDir, join }] = await Promise.all([
+  const [{ default: Database }, { appConfigDir, join }] = await Promise.all([
     import('@tauri-apps/plugin-sql'), import('@tauri-apps/api/path'),
   ]);
-  return sqliteRepo(() => Database.load('sqlite:carnet.db'), async () => join(await appDataDir(), 'carnet.db'));
+  // tauri-plugin-sql keeps the database in the app config dir (the same folder as app data on Windows).
+  return sqliteRepo(() => Database.load('sqlite:carnet.db'), async () => join(await appConfigDir(), 'carnet.db'));
 }

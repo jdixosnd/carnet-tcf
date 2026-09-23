@@ -12,7 +12,13 @@ export function useHotkeys(map: Record<string, Handler>, enabled = true): void {
   useEffect(() => {
     if (!enabled) return;
     const onKey = (e: KeyboardEvent) => {
-      const key = e.key === ' ' ? 'Space' : e.key;
+      if (e.repeat) return; // a held key must not answer and then skip the feedback
+      // While a dialog is open (e.g. "End this session?"), the page underneath must not react.
+      if (document.querySelector('[role="dialog"]')) return;
+      let key = e.key === ' ' ? 'Space' : e.key;
+      // AZERTY's number row types & é " ' — use the physical key for the 1–4 answers.
+      const digit = /^(?:Digit|Numpad)([0-9])$/.exec(e.code ?? '');
+      if (digit && !(key in ref.current)) key = digit[1];
       if (e.ctrlKey || e.metaKey) {
         const h = ref.current[`Ctrl+${key.toLowerCase()}`];
         if (h) { e.preventDefault(); h(e); }

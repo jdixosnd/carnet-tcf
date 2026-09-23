@@ -8,3 +8,4 @@ public/resources/
 test-results/
 playwright-report/
 .superpowers/
+tsconfig.tsbuildinfo

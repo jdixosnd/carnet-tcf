@@ -30,6 +30,7 @@ export interface CarnetState extends UserData {
 }
 
 let repo: Repo | null = null;
+let initing: Promise<void> | null = null;
 const RETRY_MS = [200, 800, 2000];
 
 /** Runs a repository write, retrying 3 times; the in-memory state is already updated. */
@@ -45,13 +46,8 @@ function persist(fn: (r: Repo) => Promise<void>): void {
   attempt(0);
 }
 
-export const useCarnet = create<CarnetState>()((set, get) => ({
-  status: 'loading',
-  words: [], audio: null, dix: null,
-  cards: {}, hist: {}, settings: DEFAULT_SETTINGS, extraToday: {},
-  today: dayNum(), dbPath: '',
-
-  async init(opts = {}) {
+export const useCarnet = create<CarnetState>()((set, get) => {
+  const doInit = async (opts: { repo?: Repo; words?: Word[]; audio?: AudioIndex }): Promise<void> => {
     set({ status: 'loading', error: undefined });
     let data;
     try {
@@ -79,6 +75,18 @@ export const useCarnet = create<CarnetState>()((set, get) => ({
       settings: { ...DEFAULT_SETTINGS, ...data.settings },
       dbPath: await repo.dataPath().catch(() => ''),
     });
+  };
+
+  return {
+  status: 'loading',
+  words: [], audio: null, dix: null,
+  cards: {}, hist: {}, settings: DEFAULT_SETTINGS, extraToday: {},
+  today: dayNum(), dbPath: '',
+
+  init(opts = {}) {
+    // StrictMode runs effects twice in dev: share one load so a new database isn't opened twice.
+    initing ??= doInit(opts).finally(() => { initing = null; });
+    return initing;
   },
 
   tick() {
@@ -89,6 +97,7 @@ export const useCarnet = create<CarnetState>()((set, get) => ({
   },
 
   rate(i, r) {
+    get().tick(); // the minute timer may not have noticed midnight yet
     const { words, cards, hist, today, extraToday } = get();
     const w = words[i];
     const prev = cards[w.key];
@@ -123,7 +132,15 @@ export const useCarnet = create<CarnetState>()((set, get) => ({
   async importBackup(b) {
     if (!repo) throw new Error('not ready');
     const settings = { ...b.settings, onboarded: true };
-    await repo.replaceAll({ ...b, settings });
+    try {
+      await repo.replaceAll({ ...b, settings });
+    } catch (e) {
+      // Show what is really stored, whatever the failure left behind.
+      const d = await repo.loadAll().catch(() => null);
+      if (d) set({ cards: d.cards, hist: d.hist, settings: { ...DEFAULT_SETTINGS, ...d.settings },
+        extraToday: Object.fromEntries(Object.entries(d.extraToday).filter(([, day]) => day === get().today)) });
+      throw e;
+    }
     set({ cards: b.cards, hist: b.hist, extraToday: {}, settings: { ...get().settings, ...settings } });
   },
 
@@ -132,4 +149,5 @@ export const useCarnet = create<CarnetState>()((set, get) => ({
     await repo.eraseProgress();
     set({ cards: {}, hist: {}, extraToday: {} });
   },
-}));
+};
+});

@@ -41,3 +41,26 @@ test('space maps as "Space"', () => {
   fireEvent.keyDown(document.body, { key: ' ' });
   expect(sp).toHaveBeenCalledTimes(1);
 });
+
+test('AZERTY number row (& é " \') maps to 1–4 by key position', () => {
+  const one = vi.fn(), two = vi.fn();
+  render(<Probe map={{ '1': one, '2': two }} />);
+  fireEvent.keyDown(document.body, { key: '&', code: 'Digit1' });
+  fireEvent.keyDown(document.body, { key: 'é', code: 'Digit2' });
+  expect(one).toHaveBeenCalledTimes(1);
+  expect(two).toHaveBeenCalledTimes(1);
+});
+
+test('held-down keys (auto-repeat) are ignored', () => {
+  const enter = vi.fn();
+  render(<Probe map={{ Enter: enter }} />);
+  fireEvent.keyDown(document.body, { key: 'Enter', repeat: true });
+  expect(enter).not.toHaveBeenCalled();
+});
+
+test('shortcuts pause while a dialog is open', () => {
+  const one = vi.fn();
+  render(<><Probe map={{ '1': one }} /><div role="dialog">confirm</div></>);
+  fireEvent.keyDown(document.body, { key: '1' });
+  expect(one).not.toHaveBeenCalled();
+});

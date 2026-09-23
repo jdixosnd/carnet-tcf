@@ -45,3 +45,8 @@ test('articles themselves can be the answer', () => {
   expect(matchTyped('la', W('le'), words).kind).toBe('exact');
   expect(matchTyped("l'", W('le'), words).kind).toBe('exact');
 });
+
+test('oe typed for œ counts, with the ligature marked', () => {
+  expect(matchTyped('coeur', W('cœur'), words)).toMatchObject({ kind: 'accent', correct: 'cœur', fixed: [1] });
+  expect(matchTyped('soeur', W('sœur'), words).kind).toBe('accent');
+});

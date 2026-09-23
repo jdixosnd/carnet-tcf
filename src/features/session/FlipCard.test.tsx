@@ -34,8 +34,26 @@ test('rating keys do nothing on the front', () => {
 
 test('practice rounds show no schedule', () => {
   render(<FlipCard word={w} practice retry={false} onResult={vi.fn()} />);
+  act(() => { vi.advanceTimersByTime(300); });
   fireEvent.click(screen.getByRole('button', { name: /show answer/i }));
   act(() => { vi.advanceTimersByTime(400); });
   expect(screen.getByText('1 · again')).toBeInTheDocument();
   expect(screen.getByText('3 · got it')).toBeInTheDocument();
+});
+
+test('a click landing right after the card appears (double-click) does not flip it', () => {
+  render(<FlipCard word={w} practice={false} retry={false} onResult={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: /show answer/i }), { detail: 2 });
+  act(() => { vi.advanceTimersByTime(400); });
+  expect(screen.queryByText('to wait (for), to expect')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /show answer/i }), { detail: 1 });
+  act(() => { vi.advanceTimersByTime(400); });
+  expect(screen.getByText('to wait (for), to expect')).toBeInTheDocument();
+});
+
+test('Space on the focused button (a keyboard click) flips at once', () => {
+  render(<FlipCard word={w} practice={false} retry={false} onResult={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: /show answer/i }), { detail: 0 });
+  act(() => { vi.advanceTimersByTime(400); });
+  expect(screen.getByText('to wait (for), to expect')).toBeInTheDocument();
 });

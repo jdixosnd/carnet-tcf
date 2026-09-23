@@ -26,6 +26,8 @@ export function FlipCard({ word: w, card, practice, retry, onResult }: {
 }) {
   const [phase, setPhase] = useState<Phase>('front');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // A double-click on the previous card's rating would land on this card's "Show answer".
+  const shownAt = useRef(Date.now());
   useEffect(() => () => clearTimeout(timer.current), []);
   const back = phase === 'in-start' || phase === 'back';
 
@@ -78,7 +80,7 @@ export function FlipCard({ word: w, card, practice, retry, onResult }: {
           </div>
         </div>
         <div className="flex flex-col items-center gap-2.5">
-          <Button variant="dark" autoFocus onClick={flip}>Show answer</Button>
+          <Button variant="dark" autoFocus onClick={e => { if (e.detail === 0 || Date.now() - shownAt.current > 250) flip(); }}>Show answer</Button>
           <span className="text-[13px] text-ink-3">or press Space</span>
         </div>
       </div>

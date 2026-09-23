@@ -75,3 +75,28 @@ test('clearExtraBefore and dataPath', async () => {
   expect((await r.loadAll()).extraToday).toEqual({ b: 7 });
   expect(await r.dataPath()).toBe('/data/carnet.db');
 });
+
+test('a failed import rolls back, leaving the old progress', async () => {
+  const db = nodeDb();
+  const failing: Db = {
+    select: db.select,
+    async execute(sql, bind) {
+      if (sql.startsWith('BEGIN')) {            // run part of the batch, then fail mid-way
+        await db.execute('BEGIN; DELETE FROM cards;');
+        throw new Error('disk I/O error');
+      }
+      return db.execute(sql, bind);
+    },
+  };
+  const r = sqliteRepo(async () => failing, async () => '');
+  await r.saveReview('keep', card, 7, { rev: 1, ok: 1, nw: 1 });
+  await expect(r.replaceAll({ cards: {}, hist: {}, settings: {} })).rejects.toThrow('disk');
+  expect(Object.keys((await r.loadAll()).cards)).toEqual(['keep']);
+});
+
+test('a failed open is retried on the next call', async () => {
+  let n = 0;
+  const r = sqliteRepo(async () => { if (n++ === 0) throw new Error('locked'); return nodeDb(); }, async () => '');
+  await expect(r.loadAll()).rejects.toThrow('locked');
+  await expect(r.loadAll()).resolves.toMatchObject({ cards: {} });
+});

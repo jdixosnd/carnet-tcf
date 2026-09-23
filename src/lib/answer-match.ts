@@ -24,7 +24,14 @@ export function matchTyped(input: string, w: Word, words: Word[]): Match {
   const correct = targets.find(t => norm(t) === nt);
   if (correct) {
     const a = correct.normalize('NFC'), b = typed.normalize('NFC');
-    const fixed = [...a].flatMap((ch, k) => (ch !== [...b][k] ? [k] : []));
+    // Walk both strings: a letter typed without its accent (or "oe" for "œ") marks that letter as fixed.
+    const fixed: number[] = [];
+    let pos = 0;
+    [...a].forEach((ch, k) => {
+      if (b.startsWith(ch, pos)) { pos += ch.length; return; }
+      fixed.push(k);
+      pos += norm(ch).length || 1;
+    });
     return { kind: 'accent', typed, correct: a, fixed };
   }
   const other = words.find(x => x.nfr === nt || x.nforms.includes(nt));

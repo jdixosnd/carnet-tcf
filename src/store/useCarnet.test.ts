@@ -104,3 +104,29 @@ test('a failed import leaves progress as stored and rethrows', async () => {
   expect(Object.keys(store().cards)).toEqual(['w1']);
   expect(store().settings.onboarded).toBe(false);
 });
+
+test('a failed import resyncs the store from the repo', async () => {
+  const base = mem();
+  const repo: Repo = { ...base, replaceAll: async () => { await base.saveReview('w7', { b: 4, d: 1, r: 1, w: 0, f: 1, l: 1 }, 1, { rev: 1, ok: 1, nw: 1 }); throw new Error('count'); } };
+  await store().init({ repo, words, audio });
+  await expect(store().importBackup({ cards: {}, hist: {}, settings: {} })).rejects.toThrow();
+  expect(store().cards.w7).toMatchObject({ b: 4 });
+});
+
+test('concurrent init calls share one load', async () => {
+  const repo = mem();
+  const spy = vi.spyOn(repo, 'loadAll');
+  await Promise.all([store().init({ repo, words, audio }), store().init({ repo, words, audio })]);
+  expect(spy).toHaveBeenCalledTimes(1);
+});
+
+test('a rating just after midnight counts for the new day even before the tick', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 8, 24, 23, 59));
+  await store().init({ repo: mem(), words, audio });
+  const t = store().today;
+  vi.setSystemTime(new Date(2026, 8, 25, 0, 0, 30));
+  store().rate(4, 'knew');
+  expect(store().hist[t + 1]).toEqual({ rev: 1, ok: 1, nw: 1 });
+  expect(store().hist[t]).toBeUndefined();
+});
