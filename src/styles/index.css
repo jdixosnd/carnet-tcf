@@ -38,6 +38,9 @@
   --color-knew-sub: var(--c-knew-sub);
   --color-knew-solid: var(--c-knew-solid);
   --color-danger: var(--c-danger);
+  --color-hero: var(--c-hero);
+  --color-hero-ink: var(--c-hero-ink);
+  --color-hero-body: var(--c-hero-body);
   --color-hover: var(--c-hover);
   --color-win-hover: var(--c-win-hover);
   --color-close: var(--c-close);
