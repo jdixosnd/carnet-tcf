@@ -57,6 +57,7 @@
 }
 
 html, body, #root { height: 100%; }
+html { line-height: normal; } /* the mocks use the browser default, not Tailwind's 1.5 */
 body {
   margin: 0;
   background: var(--c-paper);
