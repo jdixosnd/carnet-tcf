@@ -7,3 +7,4 @@ public/resources/
 .DS_Store
 test-results/
 playwright-report/
+.superpowers/

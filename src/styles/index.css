@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+@import './fonts.css';
+@import './tokens.css';
+
+@theme {
+  --color-*: initial;
+  --color-white: #fff;
+  --color-transparent: transparent;
+  --color-paper: var(--c-paper);
+  --color-chrome: var(--c-chrome);
+  --color-surface: var(--c-surface);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-track: var(--c-track);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-ink-4: var(--c-ink-4);
+  --color-on-ink: var(--c-on-ink);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+  --color-accent-strong: var(--c-accent-strong);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-light: var(--c-accent-light);
+  --color-forgot-bg: var(--c-forgot-bg);
+  --color-forgot-border: var(--c-forgot-border);
+  --color-forgot-text: var(--c-forgot-text);
+  --color-forgot-sub: var(--c-forgot-sub);
+  --color-forgot-solid: var(--c-forgot-solid);
+  --color-hard-bg: var(--c-hard-bg);
+  --color-hard-border: var(--c-hard-border);
+  --color-hard-text: var(--c-hard-text);
+  --color-hard-sub: var(--c-hard-sub);
+  --color-hard-solid: var(--c-hard-solid);
+  --color-knew-bg: var(--c-knew-bg);
+  --color-knew-border: var(--c-knew-border);
+  --color-knew-text: var(--c-knew-text);
+  --color-knew-sub: var(--c-knew-sub);
+  --color-knew-solid: var(--c-knew-solid);
+  --color-danger: var(--c-danger);
+  --color-hover: var(--c-hover);
+  --color-win-hover: var(--c-win-hover);
+  --color-close: var(--c-close);
+
+  --font-serif: 'Newsreader Variable', 'Newsreader', Georgia, serif;
+  --font-sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-script: 'Playwrite FR Moderne', cursive;
+  --font-mono: Consolas, 'DejaVu Sans Mono', monospace;
+  --font-win: 'Segoe UI', system-ui, sans-serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-dialog: var(--shadow-dialog);
+  --shadow-seg: var(--shadow-seg);
+  --shadow-nav: var(--shadow-nav);
+
+  --ease-flip: cubic-bezier(.2, .7, .2, 1);
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+input, textarea { user-select: text; }
+:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.eyebrow { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c-ink-3); }
+.tnum { font-variant-numeric: tabular-nums; }
+.press { transition: transform 120ms, background-color 150ms, border-color 150ms, color 150ms; }
+.press:active:not(:disabled) { transform: translateY(1px); }
+
+@keyframes ring-pulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+@keyframes dialog-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

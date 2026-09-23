@@ -1,0 +1,62 @@
+/* Design tokens — handoff §6. Components use these via Tailwind theme colours only. */
+:root {
+  --c-paper: #F4EFE6;
+  --c-chrome: #EDE7DB;
+  --c-surface: #FBF8F2;
+  --c-line: #DED6C7;
+  --c-line-strong: #CFC6B5;
+  --c-track: #E6DFD2;
+  --c-ink: #1E2230;
+  --c-ink-2: #4A4B55;
+  --c-ink-3: #5A5A60;
+  --c-ink-4: #6B6A66;
+  --c-on-ink: #F4EFE6;
+  --c-accent: #2B47A0;
+  --c-on-accent: #FFFFFF;
+  --c-accent-strong: #1E3378;
+  --c-accent-soft: #E4E8F4;
+  --c-accent-light: #9AAAD8;
+  --c-forgot-bg: #F6E3DE; --c-forgot-border: #E3BDB3; --c-forgot-text: #8E2F1F; --c-forgot-sub: #7A3A2E; --c-forgot-solid: #B4432F;
+  --c-hard-bg: #F3E9D4;   --c-hard-border: #DECB9E;   --c-hard-text: #7A5410;   --c-hard-sub: #6E5320;   --c-hard-solid: #A7741B;
+  --c-knew-bg: #DDEBE1;   --c-knew-border: #B4D0BD;   --c-knew-text: #1F5A38;   --c-knew-sub: #2E5A40;   --c-knew-solid: #2F7A4F;
+  --c-danger: #F9EEEA;
+  --c-focus: #2B47A0;
+  --c-hover: #E6DFD2;
+  --c-win-hover: #E0D9CC;
+  --c-close: #C42B1C;
+  --c-scrim: rgba(30, 34, 48, .38);
+  --shadow-card: 0 2px 0 var(--c-line), 0 20px 40px rgba(30, 34, 48, .06);
+  --shadow-dialog: 0 30px 80px rgba(0, 0, 0, .3);
+  --shadow-seg: 0 1px 2px rgba(0, 0, 0, .08);
+  --shadow-nav: 0 1px 0 var(--c-line);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --c-paper: #16181F;
+  --c-chrome: #1B1D25;
+  --c-surface: #1E212A;
+  --c-line: #2E323D;
+  --c-line-strong: #3A3F4C;
+  --c-track: #2A2E38;
+  --c-ink: #ECE7DD;
+  --c-ink-2: #A3A09A;
+  --c-ink-3: #8E8B85;
+  --c-ink-4: #7A7872;
+  --c-on-ink: #16181F;
+  --c-accent: #8FA6F0;
+  --c-on-accent: #16181F;
+  --c-accent-strong: #C9D4FA;
+  --c-accent-soft: #2A3456;
+  --c-accent-light: #4A5C99;
+  --c-forgot-bg: #3A2320; --c-forgot-border: #5C3530; --c-forgot-text: #F2B1A5; --c-forgot-sub: #D9A195; --c-forgot-solid: #E07A66;
+  --c-hard-bg: #352C1B;   --c-hard-border: #57472A;   --c-hard-text: #E8C98A;   --c-hard-sub: #CDB27C;   --c-hard-solid: #D9A441;
+  --c-knew-bg: #1E3226;   --c-knew-border: #2F4E3B;   --c-knew-text: #A6D8B6;   --c-knew-sub: #93C2A3;   --c-knew-solid: #5FB27F;
+  --c-danger: #2A1C1A;
+  --c-focus: #8FA6F0;
+  --c-hover: #252833;
+  --c-win-hover: #2A2D38;
+  --c-scrim: rgba(0, 0, 0, .55);
+  --shadow-card: 0 2px 0 var(--c-line), 0 20px 40px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
