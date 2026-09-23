@@ -33,8 +33,8 @@ export function CompletePage() {
   const head = answered ? `${fmt(run.right)} of ${fmt(answered)} remembered` : 'Session ended';
   const accuracy = answered ? `${Math.round((100 * run.right) / answered)}%` : '—';
 
-  const back = () => { useRun.getState().end(); navigate('/study'); };
-  const practise = () => { useRun.getState().start(missed, { practice: true }); navigate('/session'); };
+  const back = () => { useRun.getState().end(); navigate('/study', { replace: true }); };
+  const practise = () => { useRun.getState().start(missed, { practice: true }); navigate('/session', { replace: true }); };
 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_440px] gap-12 overflow-auto px-24 py-[72px]">

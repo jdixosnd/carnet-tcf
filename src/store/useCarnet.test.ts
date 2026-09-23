@@ -130,3 +130,26 @@ test('a rating just after midnight counts for the new day even before the tick',
   expect(store().hist[t + 1]).toEqual({ rev: 1, ok: 1, nw: 1 });
   expect(store().hist[t]).toBeUndefined();
 });
+
+test('a retried save never overwrites a newer history row', async () => {
+  const base = mem();
+  let failOnce = true;
+  const repo: Repo = { ...base, saveReview: async (...a) => { if (failOnce) { failOnce = false; throw new Error('busy'); } return base.saveReview(...a); } };
+  await store().init({ repo, words, audio });
+  vi.useFakeTimers();
+  const t = store().today;
+  store().rate(1, 'knew');     // this write fails once, retries later
+  store().rate(2, 'knew');     // this one must not be overtaken by the retry
+  await vi.runAllTimersAsync();
+  expect((await base.loadAll()).hist[t]).toEqual({ rev: 2, ok: 2, nw: 2 });
+  expect((await base.loadAll()).cards).toHaveProperty('w1');
+});
+
+test('erasing right after a rating leaves nothing behind', async () => {
+  const base = mem();
+  await store().init({ repo: base, words, audio });
+  store().rate(3, 'knew');
+  await store().erase();
+  await vi.waitFor(async () => expect((await base.loadAll()).cards).toEqual({}));
+  expect((await base.loadAll()).hist).toEqual({});
+});

@@ -11,8 +11,8 @@ import { FeedbackBar } from './FeedbackBar';
 import { feedbackText } from './feedback';
 import { levelPos } from './wordMeta';
 
-export function MultipleChoice({ word: w, dir = 'fr-en', onResult }: {
-  word: Word; dir?: Direction; practice: boolean; retry: boolean; onResult(r: Rating): void;
+export function MultipleChoice({ word: w, dir = 'fr-en', onResult, onAnswer }: {
+  word: Word; dir?: Direction; practice: boolean; retry: boolean; onResult(r: Rating): void; onAnswer?(r: Rating): void;
 }) {
   const words = useCarnet(s => s.words);
   const dix = useCarnet(s => s.dix)!;
@@ -24,6 +24,7 @@ export function MultipleChoice({ word: w, dir = 'fr-en', onResult }: {
   const pick = (k: number) => {
     if (picked !== null || k >= opts.length) return;
     setPicked(k);
+    onAnswer?.(k === answer ? 'knew' : 'forgot');
     void playWord(w.i);
   };
   const next = () => { if (picked !== null) onResult(ok ? 'knew' : 'forgot'); };

@@ -25,7 +25,23 @@ const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInt
 const oneOf = <T extends string>(v: unknown, opts: readonly T[]): v is T => typeof v === 'string' && (opts as readonly string[]).includes(v);
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-export function importSettings(raw: Record<string, unknown>): Partial<Settings> {
+// Desktop key → [web key, the web value a desktop export writes for it].
+const WEB_TWINS: Record<string, [string, (v: unknown) => unknown]> = {
+  sessionSize: ['sessionLen', v => v],
+  voice: ['audio', v => v],
+  speed: ['rate', v => v],
+  game: ['mode', v => WEB_MODE[v as Settings['game']]],
+  mcDirection: ['dir', v => v],
+  listenMode: ['listenAns', v => v],
+  tests: ['test', v => (Array.isArray(v) && v.length === 1 ? v[0] : 0)],
+};
+
+export function importSettings(input: Record<string, unknown>): Partial<Settings> {
+  // The web app only edits its own key names. When a web value no longer matches what the desktop
+  // export wrote, it was changed in the web app after the export, so it wins over the desktop copy.
+  const raw = { ...input };
+  for (const [desk, [web, toWeb]] of Object.entries(WEB_TWINS))
+    if (desk in raw && web in raw && raw[web] !== toWeb(raw[desk])) delete raw[desk];
   const s: Partial<Settings> = {};
   const pick = (desktop: string, web?: string) => (desktop in raw ? raw[desktop] : web !== undefined ? raw[web] : undefined);
 

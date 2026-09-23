@@ -10,14 +10,15 @@ export type Match =
   | { kind: 'wrong'; typed: string };
 
 // Articles need a following space (or are elided), so "lecture" and "semaine" stay whole.
-const ARTICLE = /^(?:(?:le|la|les|un|une|se)\s+|(?:l'|s')\s*)/;
+const ARTICLE = /^(?:(?:le|la|les|un|une|se|des|du|de la)\s+|(?:l'|s'|de l')\s*)/;
+const PUNCT = /^[\s.!?,;:«»"“”()…-]+|[\s.!?,;:«»"“”()…-]+$/g;
 
 export function matchTyped(input: string, w: Word, words: Word[]): Match {
-  const cleaned = String(input).toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
+  const cleaned = String(input).toLowerCase().replace(/[’]/g, "'").replace(PUNCT, '').replace(/\s+/g, ' ').trim();
   const targets = [w.fr, ...w.allForms].map(f => f.toLowerCase());
   // The word itself may be an article ("le", "la", "l'").
   if (cleaned && targets.includes(cleaned)) return { kind: 'exact', typed: cleaned };
-  const typed = /^(le|la|les|un|une|se|l'|s')$/.test(cleaned) ? '' : cleaned.replace(ARTICLE, '').trim();
+  const typed = /^(le|la|les|un|une|se|des|du|de|de la|l'|s'|de l')$/.test(cleaned) ? '' : cleaned.replace(ARTICLE, '').trim();
   if (!typed) return { kind: 'empty' };
   if (targets.includes(typed)) return { kind: 'exact', typed };
   const nt = norm(typed);

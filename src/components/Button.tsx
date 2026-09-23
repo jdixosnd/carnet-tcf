@@ -14,10 +14,13 @@ const VARIANTS: Record<ButtonVariant, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }>(
-  ({ variant = 'secondary', className, type = 'button', ...rest }, ref) => (
+  ({ variant = 'secondary', className, type = 'button', onMouseDown, ...rest }, ref) => (
     <button
       ref={ref}
       type={type}
+      // Chips (Listen, Replay…) sit next to keyboard-driven cards: a mouse click must not move focus,
+      // or Space/Enter would press the chip instead of turning the card.
+      onMouseDown={e => { if (variant === 'chip') e.preventDefault(); onMouseDown?.(e); }}
       className={cn('press cursor-pointer disabled:cursor-not-allowed disabled:opacity-45', VARIANTS[variant], className)}
       {...rest}
     />

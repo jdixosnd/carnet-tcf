@@ -39,3 +39,15 @@ test('forgotten cards come back and show up as missed', async ({ page }) => {
   await page.getByRole('button', { name: 'Practise these words' }).click();
   await expect(page.getByText('Practice', { exact: true })).toBeVisible();
 });
+
+test('the back button after a session goes to Study, not into the finished session', async ({ page }) => {
+  await seed(page, { settings: { onboarded: true, newPerDay: 1 } });
+  await page.goto('/#/study');
+  await page.getByRole('button', { name: /Start session · 1 card/ }).click();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('group', { name: /how well/i })).toBeVisible();
+  await page.keyboard.press('3');
+  await expect(page.getByText('1 of 1 remembered')).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/study$/);
+});

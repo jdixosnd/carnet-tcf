@@ -26,7 +26,9 @@ function Corrected({ w, m }: { w: Word; m: Extract<Match, { kind: 'accent' }> })
   );
 }
 
-export function ListenType({ word: w, onResult }: { word: Word; practice: boolean; retry: boolean; onResult(r: Rating): void }) {
+export function ListenType({ word: w, onResult, onAnswer }: {
+  word: Word; practice: boolean; retry: boolean; onResult(r: Rating): void; onAnswer?(r: Rating): void;
+}) {
   const words = useCarnet(s => s.words);
   const [value, setValue] = useState('');
   const [m, setM] = useState<Match | null>(null);
@@ -38,9 +40,15 @@ export function ListenType({ word: w, onResult }: { word: Word; practice: boolea
   const check = () => {
     if (answered) return;
     const r = matchTyped(value, w, words);
-    if (r.kind !== 'empty') setM(r);
+    if (r.kind === 'empty') return;
+    setM(r);
+    onAnswer?.(isCorrect(r) ? 'knew' : 'forgot');
   };
-  const giveUp = () => { if (!answered) setM({ kind: 'wrong', typed: '' }); };
+  const giveUp = () => {
+    if (answered) return;
+    setM({ kind: 'wrong', typed: '' });
+    onAnswer?.('forgot');
+  };
   const next = () => { if (answered) onResult(ok ? 'knew' : 'forgot'); };
   const insert = (ch: string) => {
     const el = input.current;

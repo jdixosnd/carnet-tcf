@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useRun } from '../../store/useRun';
 import { useCarnet } from '../../store/useCarnet';
@@ -22,6 +22,8 @@ export function SessionPage() {
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(false);
   const [typeInstead, setTypeInstead] = useState<number | null>(null);
+  // An MC/listening answer is recorded on Continue; if the session ends before that, record it anyway.
+  const pending = useRef<{ pos: number; r: Rating } | null>(null);
 
   const finished = !!run && isDone(run);
   useEffect(() => { if (finished) { stopAudio(); navigate('/complete', { replace: true }); } }, [finished, navigate]);
@@ -30,10 +32,17 @@ export function SessionPage() {
   }, [run, finished]);
   useEffect(() => () => stopAudio(), []);
 
+  const finish = () => {
+    const p = pending.current, cur = useRun.getState().run;
+    if (p && cur && p.pos === cur.pos) useRun.getState().result(p.r);
+    pending.current = null;
+    stopAudio();
+    navigate('/complete', { replace: true });
+  };
   const end = () => {
     if (!run) return;
     if (run.pos < run.items.length / 2) setConfirm(true);
-    else { stopAudio(); navigate('/complete'); }
+    else finish();
   };
   useHotkeys({ Escape: () => { if (!confirm) end(); } });
 
@@ -42,11 +51,13 @@ export function SessionPage() {
   if (!item) return null;
   const w = words[item.i];
   const onResult = (r: Rating) => {
+    pending.current = null;
     useRun.getState().result(r);
     useRun.getState().next();
     setTypeInstead(null);
   };
-  const common = { word: w, practice: run.practice, retry: item.retry, onResult };
+  const onAnswer = (r: Rating) => { pending.current = { pos: run.pos, r }; };
+  const common = { word: w, practice: run.practice, retry: item.retry, onResult, onAnswer };
   const key = `${run.pos}-${item.i}`;
 
   return (
@@ -63,7 +74,7 @@ export function SessionPage() {
         <p className="m-0 text-[15px] leading-normal text-ink-2">Your answers so far are saved. Cards you haven't seen stay in today's reviews.</p>
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setConfirm(false)}>Keep going</Button>
-          <Button variant="dark" onClick={() => { setConfirm(false); stopAudio(); navigate('/complete'); }}>End session</Button>
+          <Button variant="dark" onClick={() => { setConfirm(false); finish(); }}>End session</Button>
         </div>
       </Dialog>
     </div>

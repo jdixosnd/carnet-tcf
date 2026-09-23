@@ -12,8 +12,8 @@ import { FeedbackBar } from './FeedbackBar';
 import { feedbackText } from './feedback';
 import { ListenCircle } from './ListenCircle';
 
-export function ListenChoose({ word: w, onResult, onSwitchToType }: {
-  word: Word; practice: boolean; retry: boolean; onResult(r: Rating): void; onSwitchToType?(): void;
+export function ListenChoose({ word: w, onResult, onAnswer, onSwitchToType }: {
+  word: Word; practice: boolean; retry: boolean; onResult(r: Rating): void; onAnswer?(r: Rating): void; onSwitchToType?(): void;
 }) {
   const words = useCarnet(s => s.words);
   const dix = useCarnet(s => s.dix)!;
@@ -23,7 +23,11 @@ export function ListenChoose({ word: w, onResult, onSwitchToType }: {
   const ok = picked === answer;
   useEffect(() => { void playWord(w.i); }, [w.i]);
 
-  const pick = (k: number) => { if (picked === null && k < opts.length) setPicked(k); };
+  const pick = (k: number) => {
+    if (picked !== null || k >= opts.length) return;
+    setPicked(k);
+    onAnswer?.(k === answer ? 'knew' : 'forgot');
+  };
   const next = () => { if (picked !== null) onResult(ok ? 'knew' : 'forgot'); };
   useHotkeys({
     '1': () => pick(0), '2': () => pick(1), '3': () => pick(2), '4': () => pick(3),

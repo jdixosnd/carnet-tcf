@@ -37,9 +37,13 @@ test('exported settings carry the web names too', () => {
   expect(exportSettings({ ...DEFAULT_SETTINGS, tests: [3, 4] }).test).toBe(0);
 });
 
-test('import prefers desktop keys and drops invalid values', () => {
-  expect(importSettings({ mode: 'choice', game: 'listen', test: 0, newPerDay: 'lots', speed: 9, theme: 'dark' }))
-    .toEqual({ game: 'listen', tests: null, speed: 1.2, theme: 'dark' });
+test('import maps web keys and drops invalid values', () => {
+  expect(importSettings({ mode: 'choice', test: 0, newPerDay: 'lots', speed: 9, theme: 'dark' }))
+    .toEqual({ game: 'mc', tests: null, speed: 1.2, theme: 'dark' });
+});
+
+test('a desktop key whose web twin agrees is kept', () => {
+  expect(importSettings({ mode: 'listen', game: 'listen' })).toEqual({ game: 'listen' });
 });
 
 test('whitespace inside a pasted code is ignored', () => {
@@ -52,4 +56,15 @@ test('a backup file (plain JSON) parses', () => {
 
 test.each(['', 'abc', btoa('{"x":1}'), btoa('{"cards":{"a":{"b":9,"d":1}}}'), btoa('{"cards":{"a":{"b":1}}}'), btoa('[1]')])('rejects %s', bad => {
   expect(() => decodeBackup(bad)).toThrow(BackupError);
+});
+
+test('settings edited in the web app win over the stale desktop copies', () => {
+  // exported from desktop (sessionSize 40, game flip, tests [3]), then changed in the web app
+  const raw = { ...exportSettings({ ...DEFAULT_SETTINGS, sessionSize: 40, game: 'flip', tests: [3] }), sessionLen: 60, mode: 'choice', test: 0 };
+  expect(importSettings(raw)).toMatchObject({ sessionSize: 60, game: 'mc', tests: null });
+});
+
+test('unchanged web copies keep the desktop values they cannot express', () => {
+  const raw = exportSettings({ ...DEFAULT_SETTINGS, tests: [3, 4], speed: 0.8 });
+  expect(importSettings(raw)).toMatchObject({ tests: [3, 4], speed: 0.8 });
 });

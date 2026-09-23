@@ -33,17 +33,24 @@ let repo: Repo | null = null;
 let initing: Promise<void> | null = null;
 const RETRY_MS = [200, 800, 2000];
 
-/** Runs a repository write, retrying 3 times; the in-memory state is already updated. */
+const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+let writes: Promise<void> = Promise.resolve();
+
+/**
+ * Queues a repository write (the in-memory state is already updated). Writes run one at a time, in order,
+ * each retried 3 times, so a retried write can never land after — and overwrite — a newer one.
+ */
 function persist(fn: (r: Repo) => Promise<void>): void {
   const r = repo;
   if (!r) return;
-  const attempt = (n: number): void => {
-    fn(r).catch(() => {
-      if (n < RETRY_MS.length) setTimeout(() => attempt(n + 1), RETRY_MS[n]);
-      else toast.error("Couldn't save your progress");
-    });
-  };
-  attempt(0);
+  writes = writes.then(async () => {
+    for (let n = 0; ; n++) {
+      try { await fn(r); return; } catch {
+        if (n >= RETRY_MS.length) { toast.error("Couldn't save your progress"); return; }
+        await sleep(RETRY_MS[n]);
+      }
+    }
+  });
 }
 
 export const useCarnet = create<CarnetState>()((set, get) => {
@@ -108,7 +115,12 @@ export const useCarnet = create<CarnetState>()((set, get) => {
     if (isNewCard(prev)) h.nw++;
     const { [w.key]: _gone, ...restExtra } = extraToday;
     set({ cards: { ...cards, [w.key]: card }, hist: { ...hist, [today]: h }, extraToday: restExtra });
-    persist(rp => rp.saveReview(w.key, card, today, h));
+    // Write whatever is newest when the queued write runs (another rating may have updated the day since).
+    persist(rp => {
+      const s = get();
+      if (!s.cards[w.key] || !s.hist[today]) return Promise.resolve(); // erased or replaced meanwhile
+      return rp.saveReview(w.key, s.cards[w.key], today, s.hist[today]);
+    });
   },
 
   setSetting(k, v) {
@@ -132,6 +144,7 @@ export const useCarnet = create<CarnetState>()((set, get) => {
   async importBackup(b) {
     if (!repo) throw new Error('not ready');
     const settings = { ...b.settings, onboarded: true };
+    await writes; // let queued reviews land first, so none is written on top of the import
     try {
       await repo.replaceAll({ ...b, settings });
     } catch (e) {
@@ -146,6 +159,7 @@ export const useCarnet = create<CarnetState>()((set, get) => {
 
   async erase() {
     if (!repo) throw new Error('not ready');
+    await writes;
     await repo.eraseProgress();
     set({ cards: {}, hist: {}, extraToday: {} });
   },

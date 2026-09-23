@@ -28,7 +28,7 @@ export function StudyPage() {
   const nextDue = useMemo(() => (q.queue.length ? null : nextDueDay(s.words, s, s.today)), [q.queue.length, s]);
   const counts = useMemo(() => statusCounts(s.words, s.cards), [s.words, s.cards]);
   const started = counts.total - counts.new;
-  const noMatch = q.matching === 0;
+  const noMatch = q.matching === 0 && q.queue.length === 0; // words added to today still count
   const allDone = !noMatch && !q.queue.length;
 
   const toggleLevel = (l: Level) => {
@@ -37,7 +37,7 @@ export function StudyPage() {
     setSetting('levels', next.length === LEVELS.length ? [] : next);
   };
 
-  const title = noMatch ? 'No words match these filters' : allDone ? 'All done for today' : `${plural(q.queue.length, 'card')} waiting today`;
+  const title = q.queue.length ? `${plural(q.queue.length, 'card')} waiting today` : noMatch ? 'No words match these filters' : 'All done for today';
 
   return (
     <div className="flex flex-col gap-7 px-12 py-10">
@@ -81,7 +81,7 @@ export function StudyPage() {
                 Start session · {plural(q.queue.length, 'card')}
               </Button>
             )}
-            <Button variant={allDone ? 'primary' : 'secondary'} disabled={noMatch || q.freshTotal === 0} onClick={learnMore}>Learn 10 more</Button>
+            <Button variant={allDone ? 'primary' : 'secondary'} disabled={q.matching === 0 || q.freshTotal === 0} onClick={learnMore}>Learn 10 more</Button>
             {noMatch && <span className="text-[14px] text-ink-3">Pick more levels or tests to start.</span>}
             {allDone && (
               <span className="text-[14px] text-ink-2">

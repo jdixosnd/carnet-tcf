@@ -22,7 +22,7 @@ const HALF = 160; // half of the 320 ms flip
 type Phase = 'front' | 'out' | 'in-start' | 'back';
 
 export function FlipCard({ word: w, card, practice, retry, onResult }: {
-  word: Word; card?: Card; practice: boolean; retry: boolean; onResult(r: Rating): void;
+  word: Word; card?: Card; practice: boolean; retry: boolean; onResult(r: Rating): void; onAnswer?(r: Rating): void;
 }) {
   const [phase, setPhase] = useState<Phase>('front');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCarnet } from '../../store/useCarnet';
 import { useRun } from '../../store/useRun';
 import { buildQueue } from '../../lib/session';
@@ -13,12 +13,14 @@ export function useStudy() {
   const extraToday = useCarnet(s => s.extraToday);
   const today = useCarnet(s => s.today);
   const navigate = useNavigate();
+  // From the Complete screen, a new session replaces it in history (Back returns to Study, not a finished session).
+  const replace = useLocation().pathname === '/complete';
   const q = useMemo(() => buildQueue(words, { cards, hist, settings, extraToday }, today), [words, cards, hist, settings, extraToday, today]);
 
   const startSession = () => {
     if (!q.queue.length) return;
     useRun.getState().start(q.queue, { practice: false });
-    navigate('/session');
+    navigate('/session', { replace });
   };
   const learnMore = () => {
     const c = useCarnet.getState();
@@ -27,7 +29,7 @@ export function useStudy() {
     const next = buildQueue(s.words, s, s.today);
     if (!next.queue.length) return;
     useRun.getState().start(next.queue, { practice: false });
-    navigate('/session');
+    navigate('/session', { replace });
   };
   return { q, startSession, learnMore };
 }

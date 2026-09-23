@@ -57,3 +57,9 @@ test('Space on the focused button (a keyboard click) flips at once', () => {
   act(() => { vi.advanceTimersByTime(400); });
   expect(screen.getByText('to wait (for), to expect')).toBeInTheDocument();
 });
+
+test('clicking Listen does not take keyboard focus away from Space', () => {
+  render(<FlipCard word={w} practice={false} retry={false} onResult={vi.fn()} />);
+  const listen = screen.getByRole('button', { name: /listen/i });
+  expect(fireEvent.mouseDown(listen)).toBe(false); // default prevented → focus stays put
+});
