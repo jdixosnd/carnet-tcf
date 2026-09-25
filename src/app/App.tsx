@@ -18,10 +18,13 @@ import { WordsPage } from '../features/words/WordsPage';
 import { ProgressPage } from '../features/progress/ProgressPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { WelcomePage } from '../features/onboarding/WelcomePage';
+import { UpdateDialog } from '../features/update/UpdateDialog';
+import { useUpdate } from '../store/useUpdate';
+import { isTauri } from '../repo/env';
 
 let warnedAudio = false;
 
-/** Wiring that needs the loaded store: theme, audio, the day clock, first-run redirect, Ctrl+K and Ctrl+1…5. */
+/** Wiring that needs the loaded store: theme, audio, the day clock, update checks, first-run redirect, Ctrl+K and Ctrl+1…5. */
 function Effects() {
   const theme = useCarnet(s => s.settings.theme);
   const onboarded = useCarnet(s => s.settings.onboarded);
@@ -54,6 +57,15 @@ function Effects() {
   }, []);
 
   useEffect(() => {
+    // The installed app only (not the browser dev build): 5 s after launch, then every 6 h.
+    if (!isTauri() || import.meta.env.DEV) return;
+    const check = () => void useUpdate.getState().check();
+    const first = setTimeout(check, 5_000);
+    const every = setInterval(check, 6 * 3_600_000);
+    return () => { clearTimeout(first); clearInterval(every); };
+  }, []);
+
+  useEffect(() => {
     if (!onboarded && loc.pathname !== '/welcome') navigate('/welcome', { replace: true });
   }, [onboarded, loc.pathname, navigate]);
 
@@ -78,6 +90,7 @@ export function App() {
         <BootGate>
           <HashRouter>
             <Effects />
+            <UpdateDialog />
             <Routes>
               <Route element={<AppShell />}>
                 <Route path="/study" element={<StudyPage />} />

@@ -1,6 +1,6 @@
 [package]
 name = "carnet-tcf"
-version = "1.4.2"
+version = "1.5.0"
 description = "Carnet TCF — spaced-repetition flashcards for the TCF Canada listening test"
 authors = ["Carnet TCF"]
 edition = "2021"
@@ -22,3 +22,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-process = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"

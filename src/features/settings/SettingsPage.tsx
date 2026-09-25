@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { useCarnet } from '../../store/useCarnet';
+import { useUpdate } from '../../store/useUpdate';
+import { isTauri } from '../../repo/env';
 import { Eyebrow } from '../../components/Card';
 import { Stepper } from '../../components/Stepper';
 import { Switch } from '../../components/Switch';
@@ -29,6 +31,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 export function SettingsPage() {
   const s = useCarnet(st => st.settings);
+  const checking = useUpdate(u => u.status === 'checking');
   const set = useCarnet(st => st.setSetting);
   const dbPath = useCarnet(st => st.dbPath);
   const [importOpen, setImportOpen] = useState(false);
@@ -113,9 +116,15 @@ export function SettingsPage() {
             <span className="text-[16px]">
               Version {APP_VERSION} · <button type="button" className="text-accent hover:underline" onClick={() => setAboutOpen(true)}>About</button>
             </span>
-            <Tooltip side="left" content="Update checks arrive with the Windows release">
-              <span tabIndex={0}><Button variant="small" disabled className="py-2">Check now</Button></span>
-            </Tooltip>
+            {isTauri() ? (
+              <Button variant="small" className="py-2" disabled={checking} onClick={() => void useUpdate.getState().check({ manual: true })}>
+                {checking ? 'Checking…' : 'Check now'}
+              </Button>
+            ) : (
+              <Tooltip side="left" content="Update checks work in the installed app">
+                <span tabIndex={0}><Button variant="small" disabled className="py-2">Check now</Button></span>
+              </Tooltip>
+            )}
           </div>
         </Section>
         <div className="flex items-center justify-between gap-4 rounded-[10px] border border-forgot-border bg-danger p-4">

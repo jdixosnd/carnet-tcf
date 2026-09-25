@@ -1,0 +1,3 @@
+- New Words screen: all 4,842 words in one list, with filters by test, level, status and type
+- Select words to practise, mark as known, add to today's reviews or export to CSV
+- Updates now install from inside the app

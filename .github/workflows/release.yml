@@ -1,0 +1,64 @@
+# Publishes a release: push a tag like v1.5.0 (it must match the app version).
+# Builds signed updater artifacts + NSIS/MSI installers and creates the GitHub Release with latest.json,
+# which installed apps check (plugins.updater.endpoints in src-tauri/tauri.conf.json).
+# The release notes (shown in the app's update dialog) come from RELEASE_NOTES.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches the app version
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if [ "v$v" != "$GITHUB_REF_NAME" ]; then echo "::error::tag $GITHUB_REF_NAME but package.json is $v"; exit 1; fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Read the release notes
+        id: notes
+        shell: bash
+        run: |
+          { echo 'body<<NOTES_EOF'; cat RELEASE_NOTES.md; echo 'NOTES_EOF'; } >> "$GITHUB_OUTPUT"
+
+      - name: Build, sign and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Carnet TCF ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: false
+          # Installs are NSIS (per-user), so the updater downloads the NSIS installer.
+          updaterJsonPreferNsis: true
+          args: --bundles nsis,msi

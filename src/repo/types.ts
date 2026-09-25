@@ -23,4 +23,6 @@ export interface Repo {
   /** Wipes cards, history and extra_today; keeps settings. */
   eraseProgress(): Promise<void>;
   dataPath(): Promise<string>;
+  /** Before an update installs: flush the write-ahead log into the database file and close it. */
+  close(): Promise<void>;
 }

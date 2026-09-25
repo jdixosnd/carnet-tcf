@@ -32,6 +32,8 @@ export interface CarnetState extends UserData {
   learnMore(): void;
   importBackup(b: BackupData): Promise<void>;
   erase(): Promise<void>;
+  /** Waits for queued writes, then flushes and closes the database (an update is about to install). */
+  closeForUpdate(): Promise<void>;
 }
 
 let repo: Repo | null = null;
@@ -202,6 +204,11 @@ export const useCarnet = create<CarnetState>()((set, get) => {
       throw e;
     }
     set({ cards: b.cards, hist: b.hist, extraToday: {}, settings: { ...get().settings, ...settings } });
+  },
+
+  async closeForUpdate() {
+    await writes;
+    await repo?.close();
   },
 
   async erase() {

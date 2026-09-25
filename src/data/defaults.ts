@@ -16,4 +16,4 @@ export const POS_NAME: Record<Pos, string> = {
 export const GENDER_NAME: Record<Exclude<Gender, ''>, string> = { m: 'masculine', f: 'feminine', mf: 'masculine or feminine' };
 
 export const TOTAL_WORDS = 4842;
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '1.5.0';

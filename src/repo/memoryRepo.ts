@@ -43,5 +43,6 @@ export function memoryRepo(storage: StorageLike | null = typeof localStorage !==
     },
     async eraseProgress() { data = { ...empty(), settings: data.settings }; save(); },
     async dataPath() { return 'Browser storage (development build)'; },
+    async close() { /* nothing to flush */ },
   };
 }

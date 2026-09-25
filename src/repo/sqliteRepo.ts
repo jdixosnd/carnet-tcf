@@ -6,6 +6,7 @@ import type { LoadedData, Repo } from './types';
 export interface Db {
   execute(sql: string, bind?: unknown[]): Promise<unknown>;
   select<T>(sql: string, bind?: unknown[]): Promise<T[]>;
+  close?(): Promise<unknown>;
 }
 
 const str = (s: string) => `'${s.replace(/'/g, "''")}'`;
@@ -135,6 +136,14 @@ export function sqliteRepo(open: () => Promise<Db>, path: () => Promise<string>)
     },
 
     dataPath: path,
+
+    async close() {
+      if (!dbp) return;
+      const d = await db();
+      await d.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+      await d.close?.();
+      dbp = null;
+    },
   };
 }
 

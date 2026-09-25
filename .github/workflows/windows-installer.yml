@@ -1,5 +1,5 @@
-# Builds the Windows installers (NSIS .exe + .msi) on a real Windows machine.
-# Unsigned, no updater yet (sub-project 3). Download them from the run's "Artifacts".
+# Test builds of the Windows installers (NSIS .exe + .msi) for every push; download them from the run's "Artifacts".
+# Releases (with the updater manifest) are published by release.yml when a v* tag is pushed.
 name: Windows installer
 
 on:
@@ -36,6 +36,10 @@ jobs:
         run: npx vitest run
 
       - name: Build installers
+        # The updater artifacts are signed, so the build needs the key (see release.yml).
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npx tauri build --bundles nsis,msi
 
       - name: Upload installers
