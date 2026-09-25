@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { BookOpen, ChartColumn, Search, Settings } from 'lucide-react';
+import { BookOpen, ChartColumn, List, Search, Settings } from 'lucide-react';
 import { useCarnet } from '../store/useCarnet';
 import { streak } from '../lib/stats';
 import { buildQueue } from '../lib/session';
@@ -9,8 +9,10 @@ import { Tooltip } from '../components/Tooltip';
 import { cn } from '../lib/cn';
 import { APP_VERSION } from '../data/defaults';
 
-const NAV = [
+/** Order matters: Ctrl+1…5 follow it. */
+export const NAV = [
   { to: '/study', label: 'Study', Icon: BookOpen },
+  { to: '/words', label: 'Words', Icon: List },
   { to: '/search', label: 'Search', Icon: Search },
   { to: '/progress', label: 'Progress', Icon: ChartColumn },
   { to: '/settings', label: 'Settings', Icon: Settings },

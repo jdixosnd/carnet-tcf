@@ -34,12 +34,18 @@ export function sqliteRepo(open: () => Promise<Db>, path: () => Promise<string>)
     }
   };
 
-  const insertCards = (cards: Record<string, Card>): string[] => {
+  const insertCards = (cards: Record<string, Card>, upsert = ''): string[] => {
     const rows = Object.entries(cards).map(([w, c]) =>
       `(${str(w)},${int(c.b)},${int(c.d)},${int(c.r)},${int(c.w)},${int(c.f)},${int(c.l)})`);
     const out: string[] = [];
     for (let i = 0; i < rows.length; i += 500)
-      out.push(`INSERT INTO cards (word,box,due,right,wrong,first_day,last_day) VALUES ${rows.slice(i, i + 500).join(',')}`);
+      out.push(`INSERT INTO cards (word,box,due,right,wrong,first_day,last_day) VALUES ${rows.slice(i, i + 500).join(',')}${upsert}`);
+    return out;
+  };
+  /** Comma-separated quoted words, 500 per chunk. */
+  const inList = (words: string[]): string[] => {
+    const out: string[] = [];
+    for (let i = 0; i < words.length; i += 500) out.push(words.slice(i, i + 500).map(str).join(','));
     return out;
   };
   const insertHist = (hist: Record<number, DayHist>): string[] => {
@@ -92,6 +98,23 @@ export function sqliteRepo(open: () => Promise<Db>, path: () => Promise<string>)
     async addExtraToday(word, day) {
       await (await db()).execute(
         'INSERT INTO extra_today (word, day) VALUES ($1, $2) ON CONFLICT(word) DO UPDATE SET day = excluded.day', [word, day]);
+    },
+
+    async addExtraTodayMany(words, day) {
+      const stmts: string[] = [];
+      for (let i = 0; i < words.length; i += 500) {
+        const rows = words.slice(i, i + 500).map(w => `(${str(w)},${int(day)})`).join(',');
+        stmts.push(`INSERT INTO extra_today (word, day) VALUES ${rows} ON CONFLICT(word) DO UPDATE SET day = excluded.day`);
+      }
+      if (stmts.length) await batch(stmts);
+    },
+
+    async putCards(put, remove) {
+      const stmts = [
+        ...insertCards(put, ' ON CONFLICT(word) DO UPDATE SET box=excluded.box, due=excluded.due, right=excluded.right, wrong=excluded.wrong, first_day=excluded.first_day, last_day=excluded.last_day'),
+        ...inList(remove).map(l => `DELETE FROM cards WHERE word IN (${l})`),
+      ];
+      if (stmts.length) await batch(stmts);
     },
 
     async clearExtraBefore(day) {

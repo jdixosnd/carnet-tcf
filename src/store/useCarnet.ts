@@ -2,11 +2,11 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { DEFAULT_SETTINGS } from '../data/defaults';
-import type { AudioIndex, Rating, Settings, UserData, Word } from '../data/types';
+import type { AudioIndex, Card, Rating, Settings, UserData, Word } from '../data/types';
 import { loadWords } from '../data/words';
 import { dayNum } from '../lib/day';
 import { buildDistractorIndex, type DistractorIndex } from '../lib/distractors';
-import { isNewCard, nextCard } from '../lib/srs';
+import { GAPS, isNewCard, nextCard } from '../lib/srs';
 import type { BackupData } from '../lib/backup';
 import { openRepo } from '../repo';
 import type { Repo } from '../repo/types';
@@ -24,6 +24,11 @@ export interface CarnetState extends UserData {
   rate(i: number, r: Rating): void;
   setSetting<K extends keyof Settings>(k: K, v: Settings[K]): void;
   addToToday(i: number): void;
+  /** Adds the words that aren't already due or added; returns how many were added. */
+  addManyToToday(indices: number[]): number;
+  /** Box 5, due in 35 days. Returns the previous cards (undefined = was new) for restoreCards. */
+  markKnown(indices: number[]): Record<string, Card | undefined>;
+  restoreCards(prev: Record<string, Card | undefined>): void;
   learnMore(): void;
   importBackup(b: BackupData): Promise<void>;
   erase(): Promise<void>;
@@ -133,6 +138,48 @@ export const useCarnet = create<CarnetState>()((set, get) => {
     const key = words[i].key;
     set({ extraToday: { ...extraToday, [key]: today } });
     persist(r => r.addExtraToday(key, today));
+  },
+
+  addManyToToday(indices) {
+    get().tick();
+    const { words, cards, today, extraToday } = get();
+    const keys = [...new Set(indices.map(i => words[i].key))].filter(k => {
+      const c = cards[k];
+      return extraToday[k] !== today && (isNewCard(c) || c.d > today);
+    });
+    if (!keys.length) return 0;
+    set({ extraToday: { ...extraToday, ...Object.fromEntries(keys.map(k => [k, today])) } });
+    persist(r => r.addExtraTodayMany(keys, today));
+    return keys.length;
+  },
+
+  markKnown(indices) {
+    get().tick();
+    const { words, cards, today } = get();
+    const prev: Record<string, Card | undefined> = {};
+    const put: Record<string, Card> = {};
+    for (const i of indices) {
+      const k = words[i].key;
+      if (k in prev) continue;
+      const c = cards[k];
+      prev[k] = c;
+      put[k] = isNewCard(c) ? { b: 5, d: today + GAPS[5], r: c?.r ?? 0, w: c?.w ?? 0, f: c?.f ?? today, l: today }
+        : { ...c, b: 5, d: today + GAPS[5] };
+    }
+    set({ cards: { ...cards, ...put } });
+    persist(r => r.putCards(put, []));
+    return prev;
+  },
+
+  restoreCards(prev) {
+    const cards = { ...get().cards };
+    const put: Record<string, Card> = {};
+    const remove: string[] = [];
+    for (const [k, c] of Object.entries(prev)) {
+      if (c) { cards[k] = put[k] = c; } else { delete cards[k]; remove.push(k); }
+    }
+    set({ cards });
+    persist(r => r.putCards(put, remove));
   },
 
   learnMore() {

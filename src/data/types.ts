@@ -26,7 +26,15 @@ export interface Settings {
   mcDirection: Direction | 'both'; listenMode: 'choose' | 'type'; reminderEnabled: boolean; reminderTime: string;
   autoUpdate: boolean; autostart: boolean; onboarded: boolean; extraNewToday: { day: number; n: number };
   recentSearches: string[];
+  /** Words screen: filters and sort, restored when the user comes back. */
+  wordsFilters: WordsFilters;
 }
+
+export type WordStatus = 'any' | 'new' | 'learning' | 'familiar' | 'mastered' | 'due';
+export type WordType = 'all' | 'n' | 'v' | 'adj' | 'adv' | 'other';
+export type WordSort = 'az' | 'za' | 'heard' | 'due';
+/** No tests or no levels selected means all of them. */
+export interface WordsFilters { q: string; tests: number[]; levels: Level[]; status: WordStatus; pos: WordType; sort: WordSort; }
 
 export interface UserData {
   cards: Record<string, Card>;

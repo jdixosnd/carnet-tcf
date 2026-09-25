@@ -11,7 +11,7 @@ const WEB_MODE: Record<Settings['game'], string> = { flip: 'flip', mc: 'choice',
 const FROM_WEB_MODE: Record<string, Settings['game']> = { flip: 'flip', choice: 'mc', listen: 'listen', mix: 'mix' };
 
 export function exportSettings(s: Settings): Record<string, unknown> {
-  const { recentSearches: _r, extraNewToday: _e, onboarded: _o, ...desktop } = s;
+  const { recentSearches: _r, extraNewToday: _e, onboarded: _o, wordsFilters: _f, ...desktop } = s;
   return {
     // web app names (it ignores unknown keys and keeps them, so both survive a round trip)
     // (newPerDay and levels share a name; the web's `voice` is a TTS voice id and falls back safely.)

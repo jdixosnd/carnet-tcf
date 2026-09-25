@@ -100,3 +100,15 @@ test('a failed open is retried on the next call', async () => {
   await expect(r.loadAll()).rejects.toThrow('locked');
   await expect(r.loadAll()).resolves.toMatchObject({ cards: {} });
 });
+
+test('putCards upserts and deletes in one go; addExtraTodayMany adds several words', async () => {
+  const r = repo();
+  await r.saveReview('a', card, 7, { rev: 1, ok: 1, nw: 1 });
+  await r.putCards({ a: { ...card, b: 5, d: 42 }, "l'été": { ...card, b: 5 } }, []);
+  expect((await r.loadAll()).cards).toEqual({ a: { ...card, b: 5, d: 42 }, "l'été": { ...card, b: 5 } });
+  await r.putCards({ a: card }, ["l'été"]);
+  expect((await r.loadAll()).cards).toEqual({ a: card });
+  await r.putCards({}, []);
+  await r.addExtraTodayMany(['x', "l'y"], 7);
+  expect((await r.loadAll()).extraToday).toEqual({ x: 7, "l'y": 7 });
+});

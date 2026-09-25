@@ -14,6 +14,9 @@ export interface Repo {
   saveReview(word: string, card: Card, day: number, hist: DayHist): Promise<void>;
   setSetting<K extends keyof Settings>(key: K, value: Settings[K]): Promise<void>;
   addExtraToday(word: string, day: number): Promise<void>;
+  addExtraTodayMany(words: string[], day: number): Promise<void>;
+  /** Upserts `put` and deletes `remove`, in one transaction (Mark as known, and its undo). */
+  putCards(put: Record<string, Card>, remove: string[]): Promise<void>;
   clearExtraBefore(day: number): Promise<void>;
   /** Import: replaces cards + history (and extra_today), merges settings. */
   replaceAll(b: BackupData): Promise<void>;

@@ -27,6 +27,12 @@ export function memoryRepo(storage: StorageLike | null = typeof localStorage !==
     },
     async setSetting(k, v) { data.settings = { ...data.settings, [k]: v }; save(); },
     async addExtraToday(word, day) { data.extraToday[word] = day; save(); },
+    async addExtraTodayMany(words, day) { for (const w of words) data.extraToday[w] = day; save(); },
+    async putCards(put, remove) {
+      for (const w of remove) delete data.cards[w];
+      for (const [w, c] of Object.entries(put)) data.cards[w] = { ...c };
+      save();
+    },
     async clearExtraBefore(day) {
       data.extraToday = Object.fromEntries(Object.entries(data.extraToday).filter(([, d]) => d >= day));
       save();

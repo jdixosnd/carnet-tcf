@@ -4,6 +4,7 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { Toaster, toast } from 'sonner';
 import { TitleBar } from './TitleBar';
 import { AppShell } from './AppShell';
+import { NAV } from './Sidebar';
 import { BootGate } from './BootGate';
 import { applyTheme } from './theme';
 import { useHotkeys } from './useHotkeys';
@@ -13,13 +14,14 @@ import { StudyPage } from '../features/study/StudyPage';
 import { SessionPage } from '../features/session/SessionPage';
 import { CompletePage } from '../features/session/CompletePage';
 import { SearchPage } from '../features/search/SearchPage';
+import { WordsPage } from '../features/words/WordsPage';
 import { ProgressPage } from '../features/progress/ProgressPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { WelcomePage } from '../features/onboarding/WelcomePage';
 
 let warnedAudio = false;
 
-/** Wiring that needs the loaded store: theme, audio, the day clock, first-run redirect, Ctrl+K. */
+/** Wiring that needs the loaded store: theme, audio, the day clock, first-run redirect, Ctrl+K and Ctrl+1…5. */
 function Effects() {
   const theme = useCarnet(s => s.settings.theme);
   const onboarded = useCarnet(s => s.settings.onboarded);
@@ -55,12 +57,15 @@ function Effects() {
     if (!onboarded && loc.pathname !== '/welcome') navigate('/welcome', { replace: true });
   }, [onboarded, loc.pathname, navigate]);
 
+  const inShell = loc.pathname !== '/session' && loc.pathname !== '/welcome' && loc.pathname !== '/complete';
   useHotkeys({
     'Ctrl+k': () => {
       if (loc.pathname === '/session' || loc.pathname === '/welcome') return;
       navigate('/search');
       setTimeout(() => document.getElementById('search-input')?.focus(), 0);
     },
+    // Ctrl+1…5: the sidebar pages, in order.
+    ...Object.fromEntries(NAV.map(({ to }, k) => [`Ctrl+${k + 1}`, () => { if (inShell) navigate(to); }])),
   });
   return null;
 }
@@ -76,6 +81,7 @@ export function App() {
             <Routes>
               <Route element={<AppShell />}>
                 <Route path="/study" element={<StudyPage />} />
+                <Route path="/words" element={<WordsPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/progress" element={<ProgressPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

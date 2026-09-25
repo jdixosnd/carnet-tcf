@@ -11,6 +11,7 @@ import { playSentence, playWord } from '../../lib/audio/player';
 import { PlayButton } from '../../components/PlayButton';
 import { Button } from '../../components/Button';
 import { Example } from '../../components/Example';
+import { cn } from '../../lib/cn';
 
 const STATUS = { new: 'Not started', learning: 'Learning', familiar: 'Familiar', mastered: 'Mastered' } as const;
 
@@ -21,7 +22,8 @@ const Tile = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-export function WordDetail({ w }: { w: Word }) {
+/** `compact`: the 440 px Words drawer. */
+export function WordDetail({ w, compact = false }: { w: Word; compact?: boolean }) {
   const card = useCarnet(s => s.cards[w.key]);
   const today = useCarnet(s => s.today);
   const inExtra = useCarnet(s => s.extraToday[w.key] === s.today);
@@ -32,11 +34,11 @@ export function WordDetail({ w }: { w: Word }) {
   const g = w.pos === 'n' && w.g ? `, ${GENDER_NAME[w.g]}` : '';
 
   return (
-    <div className="flex min-h-full flex-col gap-6 px-11 py-9">
+    <div className={cn('flex min-h-full flex-col gap-6', compact ? 'px-8 py-8' : 'px-11 py-9')}>
       <div className="flex flex-col gap-2">
         <span className="eyebrow text-accent!">{w.lvl} · {POS_NAME[w.pos]}{g} · rank {fmt(w.i + 1)}</span>
         <div className="flex items-center gap-4">
-          <h2 lang="fr" className="m-0 font-serif text-[64px] font-normal leading-none">{withArticle(w)}</h2>
+          <h2 lang="fr" className={cn('m-0 font-serif font-normal leading-none', compact ? 'text-[44px]' : 'text-[64px]')}>{withArticle(w)}</h2>
           <PlayButton audioKey={`w${w.i}`} label="Hear the word" onPlay={() => void playWord(w.i)} size={36} />
         </div>
         <span className="text-[22px]">{w.en}</span>

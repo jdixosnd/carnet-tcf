@@ -153,3 +153,38 @@ test('erasing right after a rating leaves nothing behind', async () => {
   await vi.waitFor(async () => expect((await base.loadAll()).cards).toEqual({}));
   expect((await base.loadAll()).hist).toEqual({});
 });
+
+test('mark as known puts cards in box 5 for 35 days, and undo restores them', async () => {
+  const repo = mem();
+  await store().init({ repo, words, audio });
+  const t = store().today;
+  store().rate(1, 'knew');
+  const before = store().cards.w1;
+  const prev = store().markKnown([0, 1, 1]);
+  expect(Object.keys(prev)).toEqual(['w0', 'w1']);
+  expect(store().cards.w0).toMatchObject({ b: 5, d: t + 35, f: t, l: t });
+  expect(store().cards.w1).toEqual({ ...before, b: 5, d: t + 35 });
+  expect(store().hist[t]).toEqual({ rev: 1, ok: 1, nw: 1 }); // not a review
+  await vi.waitFor(async () => expect((await repo.loadAll()).cards.w0).toMatchObject({ b: 5 }));
+
+  store().restoreCards(prev);
+  expect(store().cards.w0).toBeUndefined();
+  expect(store().cards.w1).toEqual(before);
+  await vi.waitFor(async () => {
+    const d = await repo.loadAll();
+    expect(d.cards.w0).toBeUndefined();
+    expect(d.cards.w1).toEqual(before);
+  });
+});
+
+test('adding many words to today skips words already due or added', async () => {
+  const repo = mem();
+  await store().init({ repo, words, audio });
+  const t = store().today;
+  store().rate(2, 'forgot'); // due tomorrow
+  store().addToToday(3);
+  expect(store().addManyToToday([2, 3, 4, 5])).toBe(3);
+  expect(store().extraToday).toEqual({ w2: t, w3: t, w4: t, w5: t });
+  expect(store().addManyToToday([4])).toBe(0);
+  await vi.waitFor(async () => expect(Object.keys((await repo.loadAll()).extraToday).sort()).toEqual(['w2', 'w3', 'w4', 'w5']));
+});
